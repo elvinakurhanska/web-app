@@ -77,12 +77,30 @@ const addNewPassword = async () => {
     }
 
     const addChangePasswordModal = document.querySelector(`#add-change-password-modal`)
-    console.log(addChangePasswordModal)
     const closeButton = addChangePasswordModal.querySelector('.btn-close')
+
+    // const siteInput = document.querySelector(`#site`)
+    // const pswInput = document.querySelector(`#password`)
+    // siteInput.value = ''
+    // pswInput.value = ''
+    
+    clearAddPasswordForm()
+
+
     closeButton.click()
     
     await getPasswords()
 }
+
+const clearInput = inputID => document.querySelector(inputID).value = ''
+//istead of line 82,83,84,85
+
+const clearAddPasswordForm = () => {
+    clearInput(`#site`)
+    clearInput(`#password`)
+}
+
+const closeAddPasswordModal = () => clearAddPasswordForm()
 
 const showErrorModal = modalText => {
     const modal = document.querySelector('#error-modal')
