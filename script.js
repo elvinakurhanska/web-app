@@ -14,6 +14,8 @@ const doPostRequest = async (url, object) => await fetch(url, {
     body: JSON.stringify(object)
 })
 
+const appendChildren = (element, ...children) => children.forEach(child => element.appendChild(child))
+
 const getPasswords = async () => {
     clearPasswordsTable()
 
@@ -31,8 +33,17 @@ const getPasswords = async () => {
         const td2 = document.createElement('td')
         td2.textContent = HIDDEN_PASSWORD
 
-        const showPasswordButton = document.createElement('button')
-        showPasswordButton.style = 'float: right'
+        const td3 = document.createElement('td')
+
+        const [showPasswordButton, changePasswordButton, deletePasswordButton] = createButtons(3)
+
+        // changePasswordButton.addEventListener('click', () => alert('change clicked'))
+
+        changePasswordButton.onclick = () => {
+            showAddChangePasswordModal('Change Password', 'Change', site)
+        }
+
+        deletePasswordButton.addEventListener('click', () => alert('delete clicked'))
 
         showPasswordButton.onclick = () => {
             const password = td2.textContent === HIDDEN_PASSWORD ?
@@ -44,13 +55,25 @@ const getPasswords = async () => {
             td2.appendChild(button)
         }
 
-        td2.appendChild(showPasswordButton)
-
-        tr.appendChild(td1)
-        tr.appendChild(td2)
-
+        appendChildren(td3, showPasswordButton, changePasswordButton, deletePasswordButton)
+        appendChildren(tr, td1, td2, td3)
         tbody.appendChild(tr)
     }
+}
+
+const createDOMs = (DOMType, times) => {
+
+}
+
+const createButtons = times => {
+    const buttons = []
+
+    for (let i = 0; i < times; i++) {
+        const button = document.createElement('button')
+        buttons.push(button)
+    }
+
+    return buttons
 }
 
 const addNewPassword = async () => {
@@ -117,11 +140,16 @@ const showErrorModal = modalText => {
     errorModal.show()
 }
 
-const showAddChangePasswordModal = headerTitle => {
+const showAddChangePasswordModal = (headerTitle, addChangePasswordButtonCaption, previousSiteValue = '') => {
     const modal = document.querySelector('#add-change-password-modal')
     const addChangePasswordModal = new bootstrap.Modal(modal)
-    const modalHeader = modal.querySelector('.modal-title')
-    modalHeader.textContent = headerTitle
+
+    modal.querySelector('.modal-title').textContent = headerTitle
+    modal.querySelector('#addChangePasswordButton').textContent = addChangePasswordButtonCaption
+
+    if (previousSiteValue) {
+        modal.querySelector('#site').value = previousSiteValue
+    }
 
     addChangePasswordModal.show()
 }

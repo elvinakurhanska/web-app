@@ -43,11 +43,13 @@
                     <thead class="table-dark">
                       <tr>
                           <td style="width: 60%;">
-                            <button onclick="showAddChangePasswordModal('Add new password')"></button>
+                            <button onclick="showAddChangePasswordModal('Add Password', 'Add')"></button>
                             Site
                           </td>
-                          <td>
+                          <td style="width: 25%;">
                               Password
+                          </td>
+                          <td tyle="width: 15%;">
                           </td>
                       </tr>
                     </thead>
@@ -131,8 +133,7 @@
                                 <input id="password" type="password" class="form-control" />
                             </div>
                             
-                            <button class="btn btn-primary add-button" onclick="addNewPassword()">
-                                Add
+                            <button id="addChangePasswordButton" class="btn btn-primary add-button" onclick="addNewPassword()">
                             </button>
                         </div>
                     </div>
