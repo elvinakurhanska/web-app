@@ -6,8 +6,12 @@ const clearPasswordsTable = () => document.querySelector('#passwords-table').inn
 
 const getTextBoxValue = textBoxId => document.querySelector(`#${textBoxId}`).value
 
-const doPostRequest = async (url, object) => await fetch(url, {
-    method: 'post',
+const post = async (url, object) => performRequest('post', url, object)
+const put = async (url, object) => performRequest('put', url, object)
+const deleteReq = async (url, object) => performRequest('delete', url, object)
+
+const performRequest = async (method, url, object) => await fetch(url, {
+    method,
     headers: {
         'Content-Type': 'application/json'
     },
@@ -27,25 +31,18 @@ const getPasswords = async () => {
     for (const site in passwords) {
         const tr = document.createElement('tr')
 
-        const td1 = document.createElement('td')
-        td1.textContent = site
+        const [td1, td2, td3] = createDOMs('td', 3)
 
-        const td2 = document.createElement('td')
+        td1.textContent = site
         td2.textContent = HIDDEN_PASSWORD
 
-        const td3 = document.createElement('td')
+        const [showPasswordIcon, changePasswordIcon, deletePasswordIcon] = createDOMs('i', 3)
 
-        const [showPasswordButton, changePasswordButton, deletePasswordButton] = createButtons(3)
+        showPasswordIcon.className = 'bi bi-eye'
+        changePasswordIcon.className = 'bi bi-pencil-square'
+        deletePasswordIcon.className = 'bi bi-trash'
 
-        // changePasswordButton.addEventListener('click', () => alert('change clicked'))
-
-        changePasswordButton.onclick = () => {
-            showAddChangePasswordModal('Change Password', 'Change', site)
-        }
-
-        deletePasswordButton.addEventListener('click', () => alert('delete clicked'))
-
-        showPasswordButton.onclick = () => {
+        showPasswordIcon.onclick = () => {
             const password = td2.textContent === HIDDEN_PASSWORD ?
                 passwords[site] :
                 HIDDEN_PASSWORD
@@ -55,28 +52,33 @@ const getPasswords = async () => {
             td2.appendChild(button)
         }
 
-        appendChildren(td3, showPasswordButton, changePasswordButton, deletePasswordButton)
+        changePasswordIcon.onclick = () => showAddChangePasswordModal('Change Password', 'Change', site)
+
+        deletePasswordIcon.onclick = async () => {
+            deleteReq(`${DEST_URL}/delete-password`, {
+                site
+            })
+            await getPasswords()
+        }
+
+        appendChildren(td3, showPasswordIcon, changePasswordIcon, deletePasswordIcon)
         appendChildren(tr, td1, td2, td3)
         tbody.appendChild(tr)
     }
 }
 
 const createDOMs = (DOMType, times) => {
-
-}
-
-const createButtons = times => {
-    const buttons = []
+    const elements = []
 
     for (let i = 0; i < times; i++) {
-        const button = document.createElement('button')
-        buttons.push(button)
+        const element = document.createElement(DOMType)
+        elements.push(element)
     }
 
-    return buttons
+    return elements
 }
 
-const addNewPassword = async () => {
+const addChangePassword = async () => {
     const [site, password] = [getTextBoxValue('site'), getTextBoxValue('password')]
 
     if (!site || !password) {
@@ -84,10 +86,18 @@ const addNewPassword = async () => {
         return
     }
 
-    const result = await doPostRequest(`${DEST_URL}/create-password`, {
-        site,
-        password
-    }).catch(_ => showErrorModal('errorModal', 'Uploading new password was not successful'))
+    let result
+    if (document.querySelector('#site').disabled) {
+        result = await put(`${DEST_URL}/change-password`, {
+            site,
+            password
+        }).catch(_ => showErrorModal('errorModal', 'Changing the password was not successful'))
+    } else {
+        result = await post(`${DEST_URL}/create-password`, {
+            site,
+            password
+        }).catch(_ => showErrorModal('errorModal', 'Uploading new password was not successful'))
+    }
 
     if (result.status === INTERNAL_SERVER_ERROR) {
         showErrorModal(`Password for this site already exists.\nPlease use 'change password' button`)
@@ -101,14 +111,8 @@ const addNewPassword = async () => {
 
     const addChangePasswordModal = document.querySelector(`#add-change-password-modal`)
     const closeButton = addChangePasswordModal.querySelector('.btn-close')
-
-    // const siteInput = document.querySelector(`#site`)
-    // const pswInput = document.querySelector(`#password`)
-    // siteInput.value = ''
-    // pswInput.value = ''
     
     clearAddPasswordForm()
-
 
     closeButton.click()
     
@@ -147,8 +151,12 @@ const showAddChangePasswordModal = (headerTitle, addChangePasswordButtonCaption,
     modal.querySelector('.modal-title').textContent = headerTitle
     modal.querySelector('#addChangePasswordButton').textContent = addChangePasswordButtonCaption
 
+    const siteInput = modal.querySelector('#site')
     if (previousSiteValue) {
-        modal.querySelector('#site').value = previousSiteValue
+        siteInput.value = previousSiteValue
+        siteInput.disabled = true
+    } else {
+        siteInput.disabled = false
     }
 
     addChangePasswordModal.show()
