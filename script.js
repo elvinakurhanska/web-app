@@ -103,7 +103,6 @@ const addChangePassword = async () => {
         showErrorModal(`Password for this site already exists.\nPlease use 'change password' button`)
         return
     }
-
     if (!result.ok) {
         showErrorModal('Request was not successfull')
         return
