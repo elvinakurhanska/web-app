@@ -55,10 +55,16 @@ const getPasswords = async () => {
         changePasswordIcon.onclick = () => showAddChangePasswordModal('Change Password', 'Change', site)
 
         deletePasswordIcon.onclick = async () => {
-            deleteReq(`${DEST_URL}/delete-password`, {
-                site
-            })
-            await getPasswords()
+            const modal = document.querySelector('#confirmation-dialog-modal')
+            const confirmationDialogModal = new bootstrap.Modal(modal)
+
+            // here we take button from confirmation modal window
+            // and attaching 'onlick' to it
+
+            const confirmationDialogButton = modal.querySelector('#confirmation-dialog-button') //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!Attention!!!!!!!!!!!!!!!!!!!!!
+            confirmationDialogButton.onclick = () => deletePassword(site)
+
+            confirmationDialogModal.show()
         }
 
         appendChildren(td3, showPasswordIcon, changePasswordIcon, deletePasswordIcon)
@@ -79,6 +85,8 @@ const createDOMs = (DOMType, times) => {
 }
 
 const addChangePassword = async () => {
+    // refactor 'getTextBoxValue' function (into 'getTextBoxValues')
+    // const [site, password] = getTextBoxValues('site', 'password')
     const [site, password] = [getTextBoxValue('site'), getTextBoxValue('password')]
 
     if (!site || !password) {
@@ -86,19 +94,20 @@ const addChangePassword = async () => {
         return
     }
 
-    let result
+    let result //rewrite into ternary
     if (document.querySelector('#site').disabled) {
         result = await put(`${DEST_URL}/change-password`, {
             site,
             password
-        }).catch(_ => showErrorModal('errorModal', 'Changing the password was not successful'))
+        }).catch(_ => showErrorModal('Changing the password was not successful'))
     } else {
         result = await post(`${DEST_URL}/create-password`, {
             site,
             password
-        }).catch(_ => showErrorModal('errorModal', 'Uploading new password was not successful'))
+        }).catch(_ => showErrorModal('Uploading new password was not successful'))
     }
 
+    // refactor into switch (and then reuse it in other requests stuff)
     if (result.status === INTERNAL_SERVER_ERROR) {
         showErrorModal(`Password for this site already exists.\nPlease use 'change password' button`)
         return
@@ -159,4 +168,21 @@ const showAddChangePasswordModal = (headerTitle, addChangePasswordButtonCaption,
     }
 
     addChangePasswordModal.show()
+}
+
+const deletePassword = async site => {
+    deleteReq(`${DEST_URL}/delete-password`, {
+        site
+    })
+
+    //for all modals we need to create a function for 3 modal window steps(BELOW), to minimize code/reuse the code
+    // - receive modal
+    // - receive close button 
+    // - receive click 
+
+    const confirmationDialogModal = document.querySelector(`#add-change-password-modal`)
+    const closeButton = confirmationDialogModal.querySelector('.btn-close')
+    closeButton.click()
+
+    await getPasswords()
 }
